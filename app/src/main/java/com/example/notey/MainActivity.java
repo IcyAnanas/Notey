@@ -1,4 +1,4 @@
-package com.example.dictaphone;
+package com.example.notey;
 
 import android.Manifest;
 import android.content.Intent;
@@ -142,7 +142,6 @@ public class MainActivity extends AppCompatActivity {
             }
             default:
                 break;
-            // Add additional cases for other permissions you may have asked for
         }
     }
 

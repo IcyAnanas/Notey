@@ -1,4 +1,4 @@
-package com.example.dictaphone;
+package com.example.notey;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
