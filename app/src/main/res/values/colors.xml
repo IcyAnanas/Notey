@@ -5,4 +5,5 @@
     <color name="colorAccent">#D81B60</color>
     <color name="colorText">#A4E405</color>
     <color name="lightText">#FFFFE0</color>
+    <color name="helpText">#a0a0a0</color>
 </resources>
