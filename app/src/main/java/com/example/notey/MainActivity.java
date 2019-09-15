@@ -3,11 +3,11 @@ package com.example.notey;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -29,8 +29,8 @@ public class MainActivity extends AppCompatActivity {
     private static final int MY_PERMISSIONS_REQUEST_RECORD_AUDIO = 17;
 
     private static final int[] notes = {R.string.A_note, R.string.A_sharp_note, R.string.B_note, R.string.C_note, R.string.C_sharp_note,
-        R.string.D_note, R.string.D_sharp_note, R.string.E_note, R.string.F_note, R.string.F_sharp_note, R.string.G_note,
-        R.string.G_sharp_note};
+            R.string.D_note, R.string.D_sharp_note, R.string.E_note, R.string.F_note, R.string.F_sharp_note, R.string.G_note,
+            R.string.G_sharp_note};
 
     private static double[] generateFreqArray() {
         double[] freqs = new double[96];
@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         freqs[11] = 51.91;  // G#1
 
         // Fill the array
-        for(int i = 12; i < 96; i++) {
+        for (int i = 12; i < 96; i++) {
             freqs[i] = freqs[i - 12] * 2;
         }
 
@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
 
     PitchDetectionHandler pdh = new PitchDetectionHandler() {
         @Override
-        public void handlePitch(PitchDetectionResult res, AudioEvent e){
+        public void handlePitch(PitchDetectionResult res, AudioEvent e) {
             final float pitch_in_Hz = res.getPitch();
             runOnUiThread(new Runnable() {
                 @Override
@@ -79,15 +79,12 @@ public class MainActivity extends AppCompatActivity {
     // 22050 - sampling frequency (in Hz), 1024 - buffer size
     AudioProcessor pitchProcessor = new PitchProcessor(PitchProcessor.PitchEstimationAlgorithm.FFT_YIN, 22050, 1024, pdh);
 
-
-
-    private final View.OnClickListener handler = new View.OnClickListener(){
+    private final View.OnClickListener handler = new View.OnClickListener() {
         public void onClick(View view) {
-            if(view == switchToToneGenerator){
+            if (view == switchToToneGenerator) {
                 Intent intent = new Intent(MainActivity.this,
                         tonePlayer.class);
                 startActivity(intent);
-//                Log.i("Content "," Main layout ");
             }
         }
     };
@@ -114,13 +111,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void initDispatcher() {
         // 22050 - sampling frequency (in Hz), 1024 - buffer size, 0 - overLap (see TarsosDP Documentation for details)
-        dispatcher = AudioDispatcherFactory.fromDefaultMicrophone(22050, 1024, 0);
-        dispatcher.addAudioProcessor(pitchProcessor);
+        if (dispatcher == null) {
+            dispatcher = AudioDispatcherFactory.fromDefaultMicrophone(22050, 1024, 0);
 
-        note_text.setText(R.string.too_much_noise);
+            dispatcher.addAudioProcessor(pitchProcessor);
 
-        Thread audioThread = new Thread(dispatcher, "Audio Thread");
-        audioThread.start();
+            Thread audioThread = new Thread(dispatcher, "Audio Thread");
+            audioThread.start();
+        }
     }
 
     @Override
@@ -128,13 +126,10 @@ public class MainActivity extends AppCompatActivity {
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_RECORD_AUDIO: {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.d("Home", "Record Audio Permission Granted");
-
                     initDispatcher();
                     break;
                 } else {
-                    Log.d("Home", "Record Audio Permission Failed");
-                    Toast.makeText( MainActivity.this.getBaseContext(), "You must allow audio recording audio to use this app.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this.getBaseContext(), "You must allow audio recording audio to use this app.", Toast.LENGTH_SHORT).show();
                     MainActivity.this.finish();
                     finish();
                 }
@@ -145,14 +140,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private int noteFromFrequencyArray(double freq) {
-        if(freq <= 0) {
+        if (freq <= 0) {
             return R.string.too_much_noise;
         }
 
-        if(freq > note_frequencies[note_frequencies.length - 1]) {
+        if (freq > note_frequencies[note_frequencies.length - 1]) {
             return R.string.too_high_frequency;
-        }
-        else if(freq < note_frequencies[0]) {
+        } else if (freq < note_frequencies[0]) {
             return R.string.too_low_frequency;
         }
 
@@ -174,21 +168,8 @@ public class MainActivity extends AppCompatActivity {
         return (note_frequencies[left] - freq) < (freq - note_frequencies[right]) ? notes[left % 12] : notes[right % 12];
     }
 
-    // Function returns R.string.<note> given the frequency of pitch
-    // if frequency is too high (or too leftw, e.g. -1 Hz), it returns
-    // proper identifier (e.g. R.string.tooMuchNoise)
-    // freq is frequency in Hz
-    private int frequencyToNote(float freq) {
-        if(freq <= 0) {
-            return R.string.too_much_noise;
-        }
-
-        else return notes[(int)((12 * java.lang.Math.pow(2, freq / base_freq))) % 12];
-    }
-
     public void processPitch(final float pitch_in_Hz) {
         TextView note_text = findViewById(R.id.note_text);
-        
         note_text.setText(noteFromFrequencyArray(pitch_in_Hz));
     }
 
@@ -199,11 +180,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         note_text = findViewById(R.id.note_text);
+        note_text.setText(R.string.too_much_noise);
 
         switchToToneGenerator = findViewById(R.id.switchToToneGenerator);
         switchToToneGenerator.setOnClickListener(handler);
 
-        if(checkAudioRecordPermission()) {
+        if (checkAudioRecordPermission()) {
             initDispatcher();
         }
     }
