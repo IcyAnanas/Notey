@@ -1,0 +1,3 @@
+The app is designed to primarily show tunes of instruments' soudns.
+It does work with voice as well, but the outcome is blurred and would need a correction.
+You'll need to give it access to microphone in order to fulfil its main functionality (otherwise it will refuse to work).
