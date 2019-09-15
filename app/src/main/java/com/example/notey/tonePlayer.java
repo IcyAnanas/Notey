@@ -10,9 +10,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class tonePlayer extends AppCompatActivity {
-    // originally from http://marblemice.blogspot.com/2010/04/generate-and-play-tone-in-android.html
-    // and modified by Steve Pomeroy <steve@staticfree.info>
-
     // Number of tunes we want to be able to play
     // Chose 7 for {A, B, C, D, E, F, G}
     private final int tunes = 7;
