@@ -189,8 +189,6 @@ public class MainActivity extends AppCompatActivity {
     public void processPitch(final float pitch_in_Hz) {
         TextView note_text = findViewById(R.id.note_text);
         
-//        note_text.setText(frequencyToNote(pitch_in_Hz));
-
         note_text.setText(noteFromFrequencyArray(pitch_in_Hz));
     }
 
