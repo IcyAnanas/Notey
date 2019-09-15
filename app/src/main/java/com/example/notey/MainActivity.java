@@ -91,7 +91,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
-    //TODO: Check whether TarsosDP can play sound
 
     boolean checkAudioRecordPermission() {
         // Check for permissions
