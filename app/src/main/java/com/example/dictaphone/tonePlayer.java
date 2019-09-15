@@ -1,14 +1,10 @@
 package com.example.dictaphone;
-
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
-import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.SparseArray;
 import android.view.View;
-import android.widget.Button;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,40 +14,33 @@ public class tonePlayer extends AppCompatActivity {
     // and modified by Steve Pomeroy <steve@staticfree.info>
 
     // Number of tunes we want to be able to play
-    // Chose 8 for {A, B, C, D, E, F, G}
+    // Chose 7 for {A, B, C, D, E, F, G}
     private final int tunes = 7;
 
     private double[] base_frequencies = new double[7];
 
-    private Map<Integer, Integer> id2numInsounds = new HashMap<Integer, Integer>();
-    private Button[] buttons = new Button[6];
+    private Map<Integer, Integer> id2numInsounds = new HashMap<>();
 
     private final int duration = 1; // seconds
     private final int sampleRate = 11025;
-    private final int numSamples = duration * sampleRate;
-
-    private final byte generatedSnd[] = new byte[2 * numSamples];
-
-    private final AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
-            sampleRate, AudioFormat.CHANNEL_OUT_MONO,
-            AudioFormat.ENCODING_PCM_16BIT, generatedSnd.length,
-            AudioTrack.MODE_STATIC);
-
+    private final int numOfSamples = duration * sampleRate;
 
     private final byte[][] sounds = new byte[tunes][];
 
-    Handler handler = new Handler();
+    AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
+            sampleRate, AudioFormat.CHANNEL_OUT_MONO,
+            AudioFormat.ENCODING_PCM_16BIT, 2 * numOfSamples,
+            AudioTrack.MODE_STATIC);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tone_player);
 
-        setButtons();
         setBase_frequencies();
         setId2numInsounds();
 
-        for(int i = 0; i < tunes; i++) {
+        for (int i = 0; i < tunes; i++) {
             sounds[i] = genTone(base_frequencies[i]);
         }
     }
@@ -66,49 +55,21 @@ public class tonePlayer extends AppCompatActivity {
         base_frequencies[6] = 392;      // G4
     }
 
-    private void setButtons() {
-        buttons[0] = findViewById(R.id.playToneC);
-        buttons[0] = findViewById(R.id.playToneD);
-        buttons[0] = findViewById(R.id.playToneE);
-        buttons[0] = findViewById(R.id.playToneF);
-        buttons[0] = findViewById(R.id.playToneG);
-        buttons[0] = findViewById(R.id.playToneA);
-    }
-
     private void setId2numInsounds() {
-        id2numInsounds.put(R.id.playToneC, 0);
-        id2numInsounds.put(R.id.playToneD, 1);
-        id2numInsounds.put(R.id.playToneE, 2);
-        id2numInsounds.put(R.id.playToneF, 3);
-        id2numInsounds.put(R.id.playToneG, 4);
-        id2numInsounds.put(R.id.playToneA, 5);
+        id2numInsounds.put(R.id.playToneE, 4);
+        id2numInsounds.put(R.id.playToneA, 0);
+        id2numInsounds.put(R.id.playToneD, 3);
+        id2numInsounds.put(R.id.playToneG, 6);
+        id2numInsounds.put(R.id.playToneB, 1);
     }
-
-
-//    @Override
-//    protected void onResume() {
-//        super.onResume();
-//
-//        // Use a new thread as this can take a while
-//        final Thread thread = new Thread(new Runnable() {
-//            public void run() {
-//                genTone();
-//                handler.post(new Runnable() {
-//                    public void run() {
-//                        playSound();
-//                    }
-//                });
-//            }
-//        });
-//        thread.start();
-//    }
 
     private byte[] genTone(double freqOfTone) {
-        byte[] sample = new byte[numSamples];
+        Double[] sample = new Double[numOfSamples];
+        byte[] sound = new byte[2 * numOfSamples];
 
         // fill out the array
-        for (int i = 0; i < numSamples; ++i) {
-            sample[i] = (byte)Math.sin(2 * Math.PI * i / (sampleRate / freqOfTone));    // TODO: byte wasn't here earlier
+        for (int i = 0; i < numOfSamples; ++i) {
+            sample[i] = Math.sin(2 * Math.PI * i / (sampleRate / freqOfTone));
         }
 
         // convert to 16 bit pcm sound array
@@ -118,24 +79,21 @@ public class tonePlayer extends AppCompatActivity {
             // scale to maximum amplitude
             final short val = (short) ((dVal * 32767));
             // in 16 bit wav PCM, first byte is the low order byte
-            generatedSnd[idx++] = (byte) (val & 0x00ff);
-            generatedSnd[idx++] = (byte) ((val & 0xff00) >>> 8);
+            sound[idx++] = (byte) (val & 0x00ff);
+            sound[idx++] = (byte) ((val & 0xff00) >>> 8);
         }
 
-        return sample;
+        return sound;
     }
 
     public void playSound(View view) {
-        for(Button b : buttons) {
-            b.setEnabled(false);
+        if(audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING) {
+            audioTrack.stop();
+            audioTrack.flush();
         }
 
         byte[] sound = sounds[id2numInsounds.get(view.getId())];
         audioTrack.write(sound, 0, sound.length);
         audioTrack.play();
-
-        for(Button b : buttons) {
-            b.setEnabled(true);
-        }
     }
 }
